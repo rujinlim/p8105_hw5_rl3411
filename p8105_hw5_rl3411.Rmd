@@ -5,7 +5,7 @@ date: "2023-11-09"
 output: github_document
 ---
 
-```{r}
+```{r, message = F}
 library(tidyverse)
 library(purrr)
 
@@ -33,7 +33,7 @@ hom_data = read_csv("data/homicide-data.csv") |>
   mutate(city_state = paste(city, state, sep =", ")) 
 ```
 
-Describe raw data!
+This dataset contains 52,179 criminal homicides from 2007 to 2017 in 50 American cities. It includes the date, location of the killing (latitude, longitude, city and state of the killing), demographic information about each victim (first and last name, race, age, sex) and the disposition of each record.
 
 ```{r}
 disp_df = hom_data |> 
@@ -47,12 +47,31 @@ balt_prop = disp_df |>
   filter(city_state == "Baltimore, MD") 
 
 test = 
-  prop.test(x = balt_prop$unsolved, n = sum(balt_prop$unsolved, balt_prop$total_homicides)) |> 
+  prop.test(x = balt_prop$unsolved, n = balt_prop$total_homicides) |> 
   broom::tidy() |> 
   select(estimate, conf.low, conf.high)
+head(test)
 ```
-For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
 
+```{r}
+result = disp_df |> 
+  mutate(test_result = map2(unsolved, total_homicides, prop.test)) |> 
+  mutate(test_result = map(test_result, broom::tidy)) |> 
+  unnest(test_result) |> 
+  select(city_state, estimate, conf.low, conf.high) 
+
+knitr::kable(result)
+```
+```{r}
+result |>  
+  mutate(city_state = fct_reorder(city_state, estimate)) |> 
+  ggplot(aes(x = estimate, y = city_state)) +
+  geom_point() +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high)) + 
+  labs (title = "Proportion of unsolved homicides in each city",
+        x = "Proportion",
+        y = "City")
+```
 
 
 # Problem 2
