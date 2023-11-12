@@ -8,6 +8,7 @@ output: github_document
 ```{r, message = F}
 library(tidyverse)
 library(purrr)
+library(viridis)
 
 knitr::opts_chunk$set(
     echo = TRUE,
@@ -16,19 +17,11 @@ knitr::opts_chunk$set(
   fig.height = 6,
   out.width = "100%"
 )
-
-options(
-  ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-
-scale_colour_discrete = scale_colour_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
 ```
 
 # Problem 1
 
-```{r}
+```{r, message = F}
 hom_data = read_csv("data/homicide-data.csv") |> 
   mutate(city_state = paste(city, state, sep =", ")) 
 ```
@@ -50,7 +43,7 @@ test =
   prop.test(x = balt_prop$unsolved, n = balt_prop$total_homicides) |> 
   broom::tidy() |> 
   select(estimate, conf.low, conf.high)
-head(test)
+test
 ```
 
 ```{r}
@@ -60,7 +53,7 @@ result = disp_df |>
   unnest(test_result) |> 
   select(city_state, estimate, conf.low, conf.high) 
 
-knitr::kable(result)
+knitr::kable(head(result))
 ```
 ```{r}
 result |>  
@@ -106,13 +99,14 @@ study |>
   ggplot(aes(x = week, y = obs, group = arm_ID, color = arm_ID)) + 
   geom_line() +
   geom_smooth(aes(group = arm, color = factor(arm)), se = F) +
-  labs(title = "Observations on each subject over 8 weeks")
+  labs(title = "Observations on each subject over 8 weeks") +
+  scale_color_viridis(discrete = TRUE)
 ```
 
 From this plot, we can see that the observational values for subjects in the experimental arm increases through the 8-week period while those in the control arm remain around 1.2 units. This suggests that the treatment/intervention might be causing an effect, resulting in higher values among the experimental group.
 
 # Problem 3
-h
+
 ### Generating dataset of samples
 
 ```{r}
